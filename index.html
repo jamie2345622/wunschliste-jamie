@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14241d">
+  <meta name="description" content="Jamies Weihnachts-Wunschliste">
+  <title>Wunschliste – Jamie Lübcke</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --night: #14241d;
+      --green: #203a2d;
+      --green-light: #2c4a39;
+      --cream: #f5efdf;
+      --gold: #e8c778;
+      --muted: #b2b9ae;
+      --red: #bd685c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      padding: 44px 18px 32px;
+      overflow-x: hidden;
+      background:
+        radial-gradient(ellipse at 50% 31%, rgb(56 83 64 / 30%), transparent 52%),
+        var(--night);
+      color: var(--cream);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    main { width: min(100%, 760px); margin: 0 auto; }
+
+    header { text-align: center; }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.6rem, 9vw, 4.25rem);
+      font-weight: 400;
+      letter-spacing: -0.055em;
+      line-height: 1;
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .tree-stage {
+      position: relative;
+      display: flex;
+      width: 100%;
+      min-height: 650px;
+      flex-direction: column;
+      align-items: center;
+      margin: 16px auto 0;
+      padding: 0 4px 30px;
+    }
+
+    .tree-star {
+      position: relative;
+      z-index: 1;
+      color: var(--gold);
+      font-size: 35px;
+      line-height: 1;
+      text-shadow: 0 0 24px rgb(232 199 120 / 35%);
+    }
+
+    .ornaments {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      width: min(100%, 650px);
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-inline: auto;
+      padding-top: 12px;
+    }
+
+    .row {
+      position: relative;
+      display: flex;
+      min-height: 68px;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-inline: auto;
+    }
+
+    .row::before {
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+      background: linear-gradient(180deg, #31513b, #23402f);
+      content: "";
+      clip-path: polygon(5% 0, 95% 0, 100% 100%, 0 100%);
+    }
+
+    .row:nth-child(1) { width: 24%; }
+    .row:nth-child(2) { width: 38%; }
+    .row:nth-child(3) { width: 52%; }
+    .row:nth-child(4) { width: 66%; }
+    .row:nth-child(5) { width: 80%; }
+    .row:nth-child(6) { width: 94%; }
+
+    .ornament {
+      position: relative;
+      display: flex;
+      width: 100%;
+      min-width: 0;
+      min-height: 50px;
+      flex: 0 1 82%;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--cream);
+      text-align: center;
+      text-decoration: none;
+      transition: color 160ms ease;
+    }
+
+    .ornament:hover { z-index: 3; color: var(--gold); }
+    .ornament:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 3px;
+    }
+
+    .ornament-name {
+      display: -webkit-box;
+      overflow: hidden;
+      max-height: 3.6em;
+      font-size: clamp(0.8rem, 2.5vw, 0.98rem);
+      font-weight: 650;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+    }
+
+    .ornament.empty { color: #e8e5d9; }
+    .ornament.empty .ornament-name { font-weight: 450; }
+
+    .setup-message {
+      width: min(100%, 560px);
+      margin: 20px auto;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .tree-trunk {
+      width: 74px;
+      height: 54px;
+      margin-top: 5px;
+      border: 1px solid rgb(255 255 255 / 9%);
+      border-radius: 3px;
+      background: linear-gradient(90deg, #614530, #79563a 50%, #614530);
+      box-shadow: inset 0 0 0 4px rgb(39 25 16 / 12%);
+    }
+
+    .snow {
+      position: fixed;
+      z-index: -1;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(2px 2px at 18% 22%, rgb(255 255 255 / 42%) 50%, transparent 55%),
+        radial-gradient(1px 1px at 78% 18%, rgb(255 255 255 / 45%) 50%, transparent 55%),
+        radial-gradient(1px 1px at 87% 65%, rgb(255 255 255 / 36%) 50%, transparent 55%),
+        radial-gradient(2px 2px at 10% 79%, rgb(255 255 255 / 28%) 50%, transparent 55%),
+        radial-gradient(1px 1px at 64% 87%, rgb(255 255 255 / 34%) 50%, transparent 55%);
+    }
+
+    @media (max-width: 540px) {
+      body { padding: 34px 10px 24px; }
+      .tree-stage { min-height: 570px; margin-top: 8px; padding-right: 0; padding-left: 0; }
+      .ornaments { gap: 7px; padding-top: 10px; }
+      .row { min-height: 59px; }
+      .row:nth-child(1) { width: 30%; }
+      .row:nth-child(2) { width: 44%; }
+      .row:nth-child(3) { width: 58%; }
+      .row:nth-child(4) { width: 72%; }
+      .row:nth-child(5) { width: 86%; }
+      .row:nth-child(6) { width: 100%; }
+      .ornament { min-height: 45px; padding: 5px 4px; }
+    }
+
+    @media (max-width: 370px) {
+      .ornament { min-height: 42px; }
+      .ornament-name { font-size: 0.72rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="snow" aria-hidden="true"></div>
+  <main>
+    <header>
+      <h1>Wunschliste</h1>
+      <p class="subtitle">Jamie Lübcke · Gespeichert werden nur Klickzahlen und grobe Gerätetypen.</p>
+      <p id="tracking-message" class="subtitle" role="status" aria-live="polite"></p>
+    </header>
+
+    <section class="tree-stage" aria-label="Wunschliste in Form eines Weihnachtsbaums">
+      <div class="tree-star" aria-hidden="true">✦</div>
+      <div class="ornaments" id="ornaments"></div>
+      <div class="tree-trunk" aria-hidden="true"></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
+  <script>
+    (() => {
+      const { createClient } = window.supabase;
+      const db = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+      const ornaments = document.querySelector("#ornaments");
+      const treeStage = document.querySelector(".tree-stage");
+      const trackingMessage = document.querySelector("#tracking-message");
+      const rows = [24, 38, 52, 66, 80, 94];
+
+      function detectDeviceType() {
+        const agent = navigator.userAgentData;
+        if (/iPad|Tablet|PlayBook|Silk/i.test(navigator.userAgent)) return "tablet";
+        if (agent && typeof agent.mobile === "boolean") {
+          return agent.mobile ? "mobile" : "desktop";
+        }
+        if (/Mobi|Android/i.test(navigator.userAgent)) return "mobile";
+        return "desktop";
+      }
+
+      function render(wishes) {
+        ornaments.replaceChildren();
+        if (wishes.length === 0) {
+          const message = document.createElement("p");
+          message.className = "setup-message";
+          message.textContent = "Hier sind gerade keine Wünsche eingetragen.";
+          ornaments.append(message);
+          return;
+        }
+
+        const itemsPerRow = Math.ceil(wishes.length / rows.length);
+        for (let index = 0; index < wishes.length; index += itemsPerRow) {
+          const row = document.createElement("div");
+          row.className = "row";
+          const depth = Math.min(rows.length, Math.floor(index / itemsPerRow));
+          row.style.width = `${rows[depth]}%`;
+
+          for (const wish of wishes.slice(index, index + itemsPerRow)) {
+            const item = document.createElement("a");
+            item.className = "ornament";
+            item.href = wish.url;
+            item.target = "_blank";
+            item.rel = "noopener noreferrer";
+            item.setAttribute("aria-label", `${wish.title} öffnen (neuer Tab)`);
+            item.addEventListener("click", () => {
+              db.from("wish_clicks")
+                .insert({ wish_id: wish.id, device_type: detectDeviceType() })
+                .then(({ error }) => {
+                  if (error) {
+                    console.error("Klick konnte nicht gespeichert werden:", error.message);
+                    trackingMessage.textContent = "Der Link wurde geöffnet, aber der Klick konnte nicht gezählt werden.";
+                  }
+                });
+            });
+
+            const label = document.createElement("span");
+            label.className = "ornament-name";
+            label.textContent = wish.title;
+            item.append(label);
+            row.append(item);
+          }
+          ornaments.append(row);
+        }
+      }
+
+      async function loadWishes() {
+        const { data, error } = await db
+          .from("wishes")
+          .select("id, title, url")
+          .eq("is_active", true)
+          .order("position", { ascending: true })
+          .order("created_at", { ascending: true });
+
+        if (error) {
+          console.error("Wunschliste konnte nicht geladen werden:", error.message);
+          ornaments.innerHTML = "";
+          const message = document.createElement("p");
+          message.className = "setup-message";
+          message.textContent = "Die Wunschliste kann gerade nicht geladen werden. Bitte versuche es später erneut.";
+          treeStage.append(message);
+          return;
+        }
+        render(data);
+      }
+
+      loadWishes();
+    })();
+  </script>
+</body>
+</html>
