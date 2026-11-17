@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14241d">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Kontrolle – Wunschliste Jamie</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --night: #14241d;
+      --green: #203a2d;
+      --green-light: #2c4a39;
+      --cream: #f5efdf;
+      --gold: #e8c778;
+      --muted: #b2b9ae;
+      --red: #bd685c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      padding: 32px 16px;
+      background: radial-gradient(ellipse at 50% 0, rgb(56 83 64 / 30%), transparent 48%), var(--night);
+      color: var(--cream);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main { width: min(100%, 900px); margin: 0 auto; }
+    h1 { margin: 0; font: 400 clamp(2.2rem, 8vw, 3.5rem)/1 Georgia, "Times New Roman", serif; letter-spacing: -0.05em; }
+    h2 { margin: 0 0 16px; font-size: 1.2rem; }
+    p { line-height: 1.5; }
+    .subtitle { margin: 8px 0 24px; color: var(--muted); }
+    .panel { margin-top: 20px; padding: 20px; border: 1px solid rgb(255 255 255 / 12%); border-radius: 12px; background: rgb(32 58 45 / 72%); }
+    .stack { display: grid; gap: 12px; }
+    .fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; gap: 10px; align-items: end; }
+    label { display: grid; gap: 6px; color: var(--muted); font-size: 0.9rem; }
+    input, button { min-height: 44px; border: 1px solid rgb(255 255 255 / 20%); border-radius: 7px; font: inherit; }
+    input { width: 100%; padding: 9px 11px; background: var(--night); color: var(--cream); }
+    button { padding: 9px 14px; background: var(--gold); color: var(--night); font-weight: 700; cursor: pointer; }
+    button.secondary { border-color: rgb(255 255 255 / 20%); background: transparent; color: var(--cream); }
+    button.danger { border-color: var(--red); background: transparent; color: #ffd2cb; }
+    button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+    button:disabled { cursor: wait; opacity: 0.65; }
+    .toolbar { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .notice { min-height: 1.5em; margin: 0; color: var(--muted); }
+    .notice.error { color: #ffc4ba; }
+    .notice.success { color: #b9e2c5; }
+    .wish-list { display: grid; gap: 12px; }
+    .wish-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 14px; border: 1px solid rgb(255 255 255 / 10%); border-radius: 9px; }
+    .wish-card h3 { margin: 0; overflow-wrap: anywhere; }
+    .wish-card a { display: inline-block; max-width: 100%; margin-top: 5px; color: var(--gold); overflow-wrap: anywhere; }
+    .wish-stats { margin: 9px 0 0; color: var(--muted); font-size: 0.9rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .login { width: min(100%, 430px); margin: 8vh auto 0; }
+    .login .stack { margin-top: 18px; }
+    .hidden { display: none !important; }
+    .privacy-note { color: var(--muted); font-size: 0.85rem; }
+
+    @media (max-width: 620px) {
+      body { padding: 22px 12px; }
+      .panel { padding: 15px; }
+      .fields { grid-template-columns: 1fr; }
+      .fields button { width: 100%; }
+      .wish-card { grid-template-columns: 1fr; }
+      .toolbar { align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section id="login-view" class="login panel">
+      <h1>Kontrolle</h1>
+      <p class="subtitle">Melde dich an, um Wünsche und Klickzahlen zu verwalten.</p>
+      <form id="login-form" class="stack">
+        <label for="login-name">Benutzername</label>
+        <input id="login-name" autocomplete="username" value="jamie" required>
+        <label for="password">Passwort</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+        <button type="submit">Anmelden</button>
+        <p id="login-message" class="notice" role="status"></p>
+      </form>
+      <p class="privacy-note">Die Anmeldung läuft sicher über Supabase. Das Passwort wird nicht in dieser Website gespeichert.</p>
+    </section>
+
+    <section id="admin-view" class="hidden">
+      <div class="toolbar">
+        <div>
+          <h1>Kontrolle</h1>
+          <p class="subtitle">Wunschliste Jamie</p>
+        </div>
+        <button id="logout" class="secondary" type="button">Abmelden</button>
+      </div>
+
+      <section class="panel">
+        <h2 id="form-title">Wunsch hinzufügen</h2>
+        <form id="wish-form" class="fields">
+          <label for="wish-title">Name<input id="wish-title" maxlength="200" required></label>
+          <label for="wish-url">Link<input id="wish-url" type="url" placeholder="https://…" required></label>
+          <button type="submit">Speichern</button>
+        </form>
+        <button id="cancel-edit" class="secondary hidden" type="button">Bearbeiten abbrechen</button>
+        <p id="admin-message" class="notice" role="status"></p>
+      </section>
+
+      <section class="panel">
+        <h2>Wünsche und Klicks</h2>
+        <p class="privacy-note">Gezählt werden Klicks und grobe Gerätetypen. Es werden keine Geräte-IDs oder IP-Adressen gespeichert; einzelne Personen lassen sich damit nicht erkennen.</p>
+        <div id="wish-list" class="wish-list" aria-live="polite"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../supabase-config.js"></script>
+  <script>
+    (() => {
+      const ADMIN_EMAIL = "jamie.trading.9@gmail.com";
+      const { createClient } = window.supabase;
+      const db = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+      const loginView = document.querySelector("#login-view");
+      const adminView = document.querySelector("#admin-view");
+      const loginForm = document.querySelector("#login-form");
+      const loginMessage = document.querySelector("#login-message");
+      const wishForm = document.querySelector("#wish-form");
+      const adminMessage = document.querySelector("#admin-message");
+      const wishList = document.querySelector("#wish-list");
+      const cancelEdit = document.querySelector("#cancel-edit");
+      let editingId = null;
+
+      function setMessage(element, message, type = "") {
+        element.textContent = message;
+        element.className = `notice ${type}`.trim();
+      }
+
+      function isAllowedUrl(value) {
+        try {
+          const url = new URL(value);
+          return url.protocol === "https:" || url.protocol === "http:";
+        } catch {
+          return false;
+        }
+      }
+
+      function showSignedOut() {
+        loginView.classList.remove("hidden");
+        adminView.classList.add("hidden");
+      }
+
+      async function showAdmin() {
+        const { data: { user }, error } = await db.auth.getUser();
+        if (error) throw error;
+        if (!user) {
+          showSignedOut();
+          return;
+        }
+        if (user.email?.toLowerCase() !== ADMIN_EMAIL) {
+          const { error: signOutError } = await db.auth.signOut();
+          if (signOutError) throw signOutError;
+          showSignedOut();
+          return;
+        }
+        loginView.classList.add("hidden");
+        adminView.classList.remove("hidden");
+        await loadWishes();
+      }
+
+      function resetEditor() {
+        editingId = null;
+        wishForm.reset();
+        document.querySelector("#form-title").textContent = "Wunsch hinzufügen";
+        wishForm.querySelector("button[type=submit]").textContent = "Speichern";
+        cancelEdit.classList.add("hidden");
+      }
+
+      async function loadWishes() {
+        setMessage(adminMessage, "Lade Wünsche und Klickzahlen …");
+        const [{ data: wishes, error: wishesError }, { data: clicks, error: clicksError }] = await Promise.all([
+          db.from("wishes").select("id, title, url, position, is_active").order("position").order("created_at"),
+          db.from("wish_clicks").select("wish_id, device_type, clicked_at").order("clicked_at", { ascending: false })
+        ]);
+        if (wishesError || clicksError) {
+          const error = wishesError || clicksError;
+          console.error("Admin-Daten konnten nicht geladen werden:", error.message);
+          setMessage(adminMessage, `Daten konnten nicht geladen werden: ${error.message}`, "error");
+          return;
+        }
+
+        const stats = new Map();
+        for (const click of clicks) {
+          const stat = stats.get(click.wish_id) || { total: 0, mobile: 0, tablet: 0, desktop: 0 };
+          stat.total += 1;
+          stat[click.device_type] += 1;
+          stats.set(click.wish_id, stat);
+        }
+
+        wishList.replaceChildren();
+        if (wishes.length === 0) {
+          const empty = document.createElement("p");
+          empty.className = "privacy-note";
+          empty.textContent = "Noch keine Wünsche eingetragen.";
+          wishList.append(empty);
+        }
+        for (const wish of wishes) {
+          const stat = stats.get(wish.id) || { total: 0, mobile: 0, tablet: 0, desktop: 0 };
+          const card = document.createElement("article");
+          card.className = "wish-card";
+          const details = document.createElement("div");
+          const title = document.createElement("h3");
+          title.textContent = wish.title;
+          const link = document.createElement("a");
+          link.href = wish.url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = wish.url;
+          const count = document.createElement("p");
+          count.className = "wish-stats";
+          count.textContent = `${stat.total} Klick${stat.total === 1 ? "" : "s"} · Handy ${stat.mobile} · Tablet ${stat.tablet} · Computer ${stat.desktop}`;
+          details.append(title, link, count);
+
+          const actions = document.createElement("div");
+          actions.className = "actions";
+          const edit = document.createElement("button");
+          edit.type = "button";
+          edit.className = "secondary";
+          edit.textContent = "Bearbeiten";
+          edit.addEventListener("click", () => {
+            editingId = wish.id;
+            document.querySelector("#wish-title").value = wish.title;
+            document.querySelector("#wish-url").value = wish.url;
+            document.querySelector("#form-title").textContent = "Wunsch bearbeiten";
+            wishForm.querySelector("button[type=submit]").textContent = "Änderungen speichern";
+            cancelEdit.classList.remove("hidden");
+            document.querySelector("#wish-title").focus();
+          });
+          const remove = document.createElement("button");
+          remove.type = "button";
+          remove.className = "danger";
+          remove.textContent = "Löschen";
+          remove.addEventListener("click", async () => {
+            if (!window.confirm(`„${wish.title}“ wirklich löschen? Zugehörige Klickzahlen werden ebenfalls gelöscht.`)) return;
+            const { error } = await db.from("wishes").delete().eq("id", wish.id);
+            if (error) {
+              setMessage(adminMessage, `Wunsch konnte nicht gelöscht werden: ${error.message}`, "error");
+              return;
+            }
+            await loadWishes();
+          });
+          actions.append(edit, remove);
+          card.append(details, actions);
+          wishList.append(card);
+        }
+        setMessage(adminMessage, "");
+      }
+
+      loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const button = loginForm.querySelector("button[type=submit]");
+        button.disabled = true;
+        setMessage(loginMessage, "Melde an …");
+        const loginName = document.querySelector("#login-name").value.trim();
+        const { error } = await db.auth.signInWithPassword({
+          email: loginName.toLowerCase() === "jamie" ? ADMIN_EMAIL : loginName,
+          password: document.querySelector("#password").value
+        });
+        button.disabled = false;
+        if (error) {
+          setMessage(loginMessage, `Anmeldung fehlgeschlagen: ${error.message}`, "error");
+          return;
+        }
+        document.querySelector("#password").value = "";
+        try {
+          await showAdmin();
+        } catch (loadError) {
+          setMessage(loginMessage, `Adminbereich konnte nicht geladen werden: ${loadError.message}`, "error");
+          showSignedOut();
+        }
+      });
+
+      wishForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const title = document.querySelector("#wish-title").value.trim();
+        const url = document.querySelector("#wish-url").value.trim();
+        if (!isAllowedUrl(url)) {
+          setMessage(adminMessage, "Bitte gib einen gültigen HTTP- oder HTTPS-Link ein.", "error");
+          return;
+        }
+        const button = wishForm.querySelector("button[type=submit]");
+        button.disabled = true;
+        const result = editingId
+          ? await db.from("wishes").update({ title, url }).eq("id", editingId)
+          : await db.from("wishes").insert({ title, url, position: Date.now() });
+        button.disabled = false;
+        if (result.error) {
+          setMessage(adminMessage, `Wunsch konnte nicht gespeichert werden: ${result.error.message}`, "error");
+          return;
+        }
+        resetEditor();
+        setMessage(adminMessage, "Wunsch gespeichert.", "success");
+        await loadWishes();
+      });
+
+      cancelEdit.addEventListener("click", resetEditor);
+      document.querySelector("#logout").addEventListener("click", async () => {
+        const { error } = await db.auth.signOut();
+        if (error) {
+          setMessage(adminMessage, `Abmeldung fehlgeschlagen: ${error.message}`, "error");
+          return;
+        }
+        showSignedOut();
+      });
+
+      db.auth.onAuthStateChange((_event, session) => {
+        if (!session) showSignedOut();
+      });
+      showAdmin().catch((error) => {
+        console.error("Adminbereich konnte nicht geöffnet werden:", error.message);
+        setMessage(loginMessage, `Adminbereich konnte nicht geladen werden: ${error.message}`, "error");
+        showSignedOut();
+      });
+    })();
+  </script>
+</body>
+</html>
