@@ -18,7 +18,9 @@
       --red: #bd685c;
     }
 
+
     * { box-sizing: border-box; }
+
 
     body {
       min-width: 320px;
@@ -29,6 +31,7 @@
       color: var(--cream);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
+
 
     main { width: min(100%, 900px); margin: 0 auto; }
     h1 { margin: 0; font: 400 clamp(2.2rem, 8vw, 3.5rem)/1 Georgia, "Times New Roman", serif; letter-spacing: -0.05em; }
@@ -61,6 +64,7 @@
     .hidden { display: none !important; }
     .privacy-note { color: var(--muted); font-size: 0.85rem; }
 
+
     @media (max-width: 620px) {
       body { padding: 22px 12px; }
       .panel { padding: 15px; }
@@ -87,6 +91,21 @@
       <p class="privacy-note">Die Anmeldung läuft sicher über Supabase. Das Passwort wird nicht in dieser Website gespeichert.</p>
     </section>
 
+
+    <section id="password-view" class="login panel hidden">
+      <h1>Passwort festlegen</h1>
+      <p class="subtitle">Lege ein neues Passwort für den Adminzugang fest.</p>
+      <form id="password-form" class="stack">
+        <label for="new-password">Neues Passwort</label>
+        <input id="new-password" type="password" minlength="12" autocomplete="new-password" required>
+        <label for="confirm-password">Passwort wiederholen</label>
+        <input id="confirm-password" type="password" minlength="12" autocomplete="new-password" required>
+        <button type="submit">Passwort speichern</button>
+        <p id="password-message" class="notice" role="status"></p>
+      </form>
+    </section>
+
+
     <section id="admin-view" class="hidden">
       <div class="toolbar">
         <div>
@@ -95,6 +114,7 @@
         </div>
         <button id="logout" class="secondary" type="button">Abmelden</button>
       </div>
+
 
       <section class="panel">
         <h2 id="form-title">Wunsch hinzufügen</h2>
@@ -107,6 +127,7 @@
         <p id="admin-message" class="notice" role="status"></p>
       </section>
 
+
       <section class="panel">
         <h2>Wünsche und Klicks</h2>
         <p class="privacy-note">Gezählt werden Klicks und grobe Gerätetypen. Es werden keine Geräte-IDs oder IP-Adressen gespeichert; einzelne Personen lassen sich damit nicht erkennen.</p>
@@ -114,6 +135,7 @@
       </section>
     </section>
   </main>
+
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../supabase-config.js"></script>
@@ -123,19 +145,25 @@
       const { createClient } = window.supabase;
       const db = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
       const loginView = document.querySelector("#login-view");
+      const passwordView = document.querySelector("#password-view");
       const adminView = document.querySelector("#admin-view");
       const loginForm = document.querySelector("#login-form");
       const loginMessage = document.querySelector("#login-message");
+      const passwordForm = document.querySelector("#password-form");
+      const passwordMessage = document.querySelector("#password-message");
       const wishForm = document.querySelector("#wish-form");
       const adminMessage = document.querySelector("#admin-message");
       const wishList = document.querySelector("#wish-list");
       const cancelEdit = document.querySelector("#cancel-edit");
+      const authAction = new URLSearchParams(window.location.hash.slice(1)).get("type");
       let editingId = null;
+
 
       function setMessage(element, message, type = "") {
         element.textContent = message;
         element.className = `notice ${type}`.trim();
       }
+
 
       function isAllowedUrl(value) {
         try {
@@ -146,10 +174,13 @@
         }
       }
 
+
       function showSignedOut() {
         loginView.classList.remove("hidden");
+        passwordView.classList.add("hidden");
         adminView.classList.add("hidden");
       }
+
 
       async function showAdmin() {
         const { data: { user }, error } = await db.auth.getUser();
@@ -169,6 +200,7 @@
         await loadWishes();
       }
 
+
       function resetEditor() {
         editingId = null;
         wishForm.reset();
@@ -176,6 +208,7 @@
         wishForm.querySelector("button[type=submit]").textContent = "Speichern";
         cancelEdit.classList.add("hidden");
       }
+
 
       async function loadWishes() {
         setMessage(adminMessage, "Lade Wünsche und Klickzahlen …");
@@ -190,6 +223,7 @@
           return;
         }
 
+
         const stats = new Map();
         for (const click of clicks) {
           const stat = stats.get(click.wish_id) || { total: 0, mobile: 0, tablet: 0, desktop: 0 };
@@ -197,6 +231,7 @@
           stat[click.device_type] += 1;
           stats.set(click.wish_id, stat);
         }
+
 
         wishList.replaceChildren();
         if (wishes.length === 0) {
@@ -221,6 +256,7 @@
           count.className = "wish-stats";
           count.textContent = `${stat.total} Klick${stat.total === 1 ? "" : "s"} · Handy ${stat.mobile} · Tablet ${stat.tablet} · Computer ${stat.desktop}`;
           details.append(title, link, count);
+
 
           const actions = document.createElement("div");
           actions.className = "actions";
@@ -257,6 +293,7 @@
         setMessage(adminMessage, "");
       }
 
+
       loginForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         const button = loginForm.querySelector("button[type=submit]");
@@ -281,6 +318,35 @@
         }
       });
 
+
+      passwordForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const password = document.querySelector("#new-password").value;
+        const confirmation = document.querySelector("#confirm-password").value;
+        if (password !== confirmation) {
+          setMessage(passwordMessage, "Die Passwörter stimmen nicht überein.", "error");
+          return;
+        }
+        const button = passwordForm.querySelector("button[type=submit]");
+        button.disabled = true;
+        const { error } = await db.auth.updateUser({ password });
+        button.disabled = false;
+        if (error) {
+          setMessage(passwordMessage, `Passwort konnte nicht gespeichert werden: ${error.message}`, "error");
+          return;
+        }
+        passwordForm.reset();
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        passwordView.classList.add("hidden");
+        try {
+          await showAdmin();
+        } catch (loadError) {
+          setMessage(passwordMessage, `Adminbereich konnte nicht geladen werden: ${loadError.message}`, "error");
+          passwordView.classList.remove("hidden");
+        }
+      });
+
+
       wishForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         const title = document.querySelector("#wish-title").value.trim();
@@ -304,6 +370,7 @@
         await loadWishes();
       });
 
+
       cancelEdit.addEventListener("click", resetEditor);
       document.querySelector("#logout").addEventListener("click", async () => {
         const { error } = await db.auth.signOut();
@@ -314,10 +381,26 @@
         showSignedOut();
       });
 
+
       db.auth.onAuthStateChange((_event, session) => {
         if (!session) showSignedOut();
       });
-      showAdmin().catch((error) => {
+      async function initialize() {
+        if (["invite", "recovery", "signup"].includes(authAction)) {
+          const { data: { session }, error } = await db.auth.getSession();
+          if (error) throw error;
+          if (session) {
+            loginView.classList.add("hidden");
+            passwordView.classList.remove("hidden");
+            adminView.classList.add("hidden");
+            return;
+          }
+        }
+        await showAdmin();
+      }
+
+
+      initialize().catch((error) => {
         console.error("Adminbereich konnte nicht geöffnet werden:", error.message);
         setMessage(loginMessage, `Adminbereich konnte nicht geladen werden: ${error.message}`, "error");
         showSignedOut();
